@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLM Code Error Detector - Queen's University</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(90deg, #C8102E 20%, #FFD700 50%, #00205B 80%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      color: #ffffff;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      border-top: 8px solid #00205B; /* Queen's Blue */
+      color: #333;
+    }
+
+    .header {
+      margin-bottom: 40px;
+    }
+
+    .logo {
+      width: 200px; 
+      margin-bottom: 20px;
+    }
+
+    .title {
+      font-size: 26px;
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #00205B;
+    }
+
+    .description {
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 20px;
+    }
+
+    .upload-section {
+      margin: 20px 0;
+    }
+
+    input[type="file"] {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 10px;
+      width: 100%;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      color: white;
+      background-color: #00205B;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .btn:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+
+    .btn:hover:not(:disabled) {
+      background-color: #001A45;
+    }
+
+    .output {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 6px;
+      background-color: #f9f9f9;
+      text-align: left;
+      white-space: pre-wrap;
+      border-left: 4px solid #FFD700; /* Queen's Gold */
+      color: #333;
+    }
+
+    .loading {
+      font-style: italic;
+      color: #888;
+    }
+
+    .footer {
+      margin-top: 20px;
+      font-size: 12px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="https://www.queensu.ca/brand-central/sites/bcwww/files/uploaded_images/logos/Queens-viguide-logos-shield-1200x589-2x_0.jpg" alt="Queen's University Logo" class="logo">
+      <div class="title">LLM Code Error Detector</div>
+    </div>
+    <div class="description">
+      Upload a code file, and our AI-powered system will analyze it for potential errors.
+    </div>
+    <div class="upload-section">
+      <input type="file" id="fileUpload" accept=".js,.java,.py,.c,.cpp,.txt">
+      <button id="uploadButton" class="btn" disabled>Analyze</button>
+    </div>
+    <div id="result" class="output" hidden></div>
+    <div class="footer">
+      &copy; 2025 Queen's University. All Rights Reserved.
+    </div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('fileUpload');
+    const uploadButton = document.getElementById('uploadButton');
+    const resultDiv = document.getElementById('result');
+
+    // Enable the analyze button if a file is selected
+    fileInput.addEventListener('change', () => {
+      uploadButton.disabled = !fileInput.files.length;
+    });
+
+    // Handle file upload and analysis
+    uploadButton.addEventListener('click', async () => {
+      const file = fileInput.files[0];
+      if (!file) {
+        alert("Please select a file to analyze.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('codeFile', file);
+
+      resultDiv.hidden = true;
+      resultDiv.textContent = "Analyzing...";
+      resultDiv.classList.add('loading');
+
+      try {
+        // Make a POST request to the backend
+        const response = await fetch('/api/analyze', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error(`Error: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        resultDiv.textContent = `Analysis Results:\n${data.result}`;
+      } catch (error) {
+        resultDiv.textContent = `An error occurred: ${error.message}`;
+      } finally {
+        resultDiv.classList.remove('loading');
+      }
+
+      resultDiv.hidden = false;
+    });
+  </script>
+</body>
+</html>
