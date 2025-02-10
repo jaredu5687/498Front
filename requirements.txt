@@ -1,0 +1,5 @@
+langchain-community
+crewai
+ollama
+flask
+flask-cors 

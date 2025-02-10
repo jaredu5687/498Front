@@ -13,19 +13,29 @@ def analyze_code():
             return jsonify({'error': 'No file provided'}), 400
         
         file = request.files['codeFile']
+        
         if file.filename == '':
             return jsonify({'error': 'No file selected'}), 400
 
-        # Read the contents of the file
-        code_content = file.read().decode('utf-8')
-        
-        # Process the code using your AI agents
-        result = process_code(code_content)
-        
-        return jsonify({'result': result})
+        try:
+            code_content = file.read().decode('utf-8')
+        except Exception as e:
+            return jsonify({'error': 'Error reading file content'}), 400
+
+        try:
+            result = process_code(code_content)
+            return jsonify({'result': result})
+        except Exception as e:
+            return jsonify({'error': f'AI processing error: {str(e)}'}), 500
 
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': f'Server error: {str(e)}'}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000) 
+    try:
+        from langchain_community.llms import Ollama
+        model = Ollama(model="codellama:7b")
+    except Exception as e:
+        print(f"Failed to connect to Ollama: {str(e)}")
+    
+    app.run(host='0.0.0.0', debug=False, port=5001) 
