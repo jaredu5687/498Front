@@ -1,10 +1,19 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import os
-from agent_two_step import process_code
+#from agent_two_step import process_code
+import feedback as fb  # Added import for feedback handling
+from debugger import process_code
+from summarizer import process_summary
+from threading import Thread
 
-app = Flask(__name__)
+
+app = Flask(__name__, template_folder='templates')
 CORS(app)  # This allows frontend to make requests to this backend
+
+@app.route('/')
+def index():
+    return render_template('index.html')  # This renders the HTML file
 
 @app.route('/api/analyze', methods=['POST'])
 def analyze_code():
@@ -24,18 +33,33 @@ def analyze_code():
 
         try:
             result = process_code(code_content)
-            return jsonify({'result': result})
+            code_summary = process_summary(code_content)  # Call summarizer
+
+            if not code_summary:
+                code_summary = "Summary not available."
+
+            return jsonify({'result': result, 'code_summary': code_summary})
+
         except Exception as e:
             return jsonify({'error': f'AI processing error: {str(e)}'}), 500
 
     except Exception as e:
         return jsonify({'error': f'Server error: {str(e)}'}), 500
 
-if __name__ == '__main__':
+@app.route('/api/feedback', methods=['POST'])
+def submit_feedback():
     try:
-        from langchain_community.llms import Ollama
-        model = Ollama(model="codellama:7b")
+        feedback_text = request.form.get('feedback', '').strip()
+        if feedback_text:
+            fb.init_feedback_log()
+            new_feedback = fb.process_feedback(feedback_text)
+            fb.save_feedback(new_feedback)
+            return jsonify({'message': 'Feedback submitted successfully!'}), 200
+        else:
+            return jsonify({'error': 'No feedback provided'}), 400
     except Exception as e:
-        print(f"Failed to connect to Ollama: {str(e)}")
-    
-    app.run(host='0.0.0.0', debug=False, port=5001) 
+        return jsonify({'error': f'Error processing feedback: {str(e)}'}), 500
+
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', debug=True, port=5017)

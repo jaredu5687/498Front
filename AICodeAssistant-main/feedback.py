@@ -12,6 +12,7 @@ import json
 FEEDBACK_LOG = "feedback_log.json"
 
 def init_feedback_log():
+    print("init_feedback_log")
     try:
         with open(FEEDBACK_LOG, "r") as f:
             pass
@@ -21,11 +22,13 @@ def init_feedback_log():
 
 
 def save_feedback(json_str):
+    print("safe_feedback")
     with open(FEEDBACK_LOG, "w") as f:
         f.write(json_str)
 
 
 def process_feedback(new_instruction):
+    print("process feedback")
     try:
         with open(FEEDBACK_LOG, "r") as f:
             existing_feedback = json.load(f)
